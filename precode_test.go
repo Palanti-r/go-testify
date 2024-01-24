@@ -1,18 +1,24 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
 	totalCount := 5
 	city := "moscow"
-	req, err := http.NewRequest(http.MethodGet, "/cafe?count="+strconv.Itoa(totalCount)+"&city="+city, nil)
+	req, err := http.NewRequest(http.MethodGet, "/cafe", nil)
+
+	query := req.URL.Query()
+	query.Add("city", city)
+	query.Add("count", strconv.Itoa(totalCount))
+	req.URL.RawQuery = query.Encode()
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
@@ -21,12 +27,16 @@ func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
 	assert.Equal(t, "Мир кофе,Сладкоежка,Кофе и завтраки,Сытый студент", responseRecorder.Body.String())
-	// здесь нужно добавить необходимые проверки
 }
 func TestMainHandlerWhenRequestIsCorrectly(t *testing.T) {
 	totalCount := 4
 	city := "moscow"
-	req, err := http.NewRequest(http.MethodGet, "/cafe?count="+strconv.Itoa(totalCount)+"&city="+city, nil)
+	req, err := http.NewRequest(http.MethodGet, "/cafe", nil)
+
+	query := req.URL.Query()
+	query.Add("city", city)
+	query.Add("count", strconv.Itoa(totalCount))
+	req.URL.RawQuery = query.Encode()
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
@@ -35,13 +45,16 @@ func TestMainHandlerWhenRequestIsCorrectly(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, responseRecorder.Code)
 	assert.NotEqual(t, 0, responseRecorder.Result().ContentLength)
-
-	// здесь нужно добавить необходимые проверки
 }
 func TestMainHandlerWhenCityIsUnSupported(t *testing.T) {
 	totalCount := 4
-	city := "Sochi"
-	req, err := http.NewRequest(http.MethodGet, "/cafe?count="+strconv.Itoa(totalCount)+"&city="+city, nil)
+	city := "UnSupported city"
+	req, err := http.NewRequest(http.MethodGet, "/cafe", nil)
+
+	query := req.URL.Query()
+	query.Add("city", city)
+	query.Add("count", strconv.Itoa(totalCount))
+	req.URL.RawQuery = query.Encode()
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
@@ -50,5 +63,4 @@ func TestMainHandlerWhenCityIsUnSupported(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, responseRecorder.Code)
 	assert.Contains(t, responseRecorder.Body.String(), "wrong city value")
-	// здесь нужно добавить необходимые проверки
 }
